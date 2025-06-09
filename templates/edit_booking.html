@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Sửa Đặt Phòng</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row .form-group { flex: 1; }
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; text-decoration: none; }
+        .error { color: #dc3545; margin-top: 5px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sửa thông tin đặt phòng</h1>
+        <p><strong>Mã đặt phòng:</strong> {{ booking['Số đặt phòng'] }}</p>
+
+        <form method="POST" action="{{ url_for('edit_booking', booking_id=booking['Số đặt phòng']) }}" id="editForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="guest_name">Tên người đặt</label>
+                    <input type="text" id="guest_name" name="Tên người đặt" value="{{ booking.get('Tên người đặt', '') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="room_type">Tên chỗ nghỉ</label>
+                    <input type="text" id="room_type" name="Tên chỗ nghỉ" value="{{ booking.get('Tên chỗ nghỉ', '') }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="check_in_date">Ngày đến</label>
+                    <input type="date" id="check_in_date" name="Check-in Date" 
+                           value="{{ booking['Check-in Date'].strftime('%Y-%m-%d') if booking['Check-in Date'] else '' }}" 
+                           required>
+                </div>
+                <div class="form-group">
+                    <label for="check_out_date">Ngày đi</label>
+                    <input type="date" id="check_out_date" name="Check-out Date" 
+                           value="{{ booking['Check-out Date'].strftime('%Y-%m-%d') if booking['Check-out Date'] else '' }}" 
+                           required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="total_payment">Tổng thanh toán</label>
+                    <input type="number" id="total_payment" name="Tổng thanh toán" value="{{ booking.get('Tổng thanh toán', 0) }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="status">Tình trạng</label>
+                    <select id="status" name="Tình trạng">
+                        <option value="OK" {% if booking.get('Tình trạng') == 'OK' %}selected{% endif %}>OK</option>
+                        <option value="Đã hủy" {% if booking.get('Tình trạng') == 'Đã hủy' %}selected{% endif %}>Đã hủy</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="collector">Người thu tiền</label>
+                    <select id="collector" name="Người thu tiền">
+                        <option value="N/A" {% if booking.get('Người thu tiền') == 'N/A' or not booking.get('Người thu tiền') %}selected{% endif %}>Chưa có</option>
+                        <option value="LOC LE" {% if booking.get('Người thu tiền') == 'LOC LE' %}selected{% endif %}>LOC LE</option>
+                        <option value="THAO LE" {% if booking.get('Người thu tiền') == 'THAO LE' %}selected{% endif %}>THAO LE</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            <a href="{{ url_for('view_bookings') }}" class="btn btn-secondary">Hủy</a>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            var checkIn = new Date(document.getElementById('check_in_date').value);
+            var checkOut = new Date(document.getElementById('check_out_date').value);
+            
+            if (checkOut <= checkIn) {
+                e.preventDefault();
+                alert('Ngày trả phòng phải sau ngày nhận phòng!');
+            }
+        });
+    </script>
+</body>
+</html> 

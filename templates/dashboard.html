@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Hotel Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">📊 Dashboard Tổng quan</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Tổng quan về hiệu suất khách sạn</li>
+    </ol>
+
+    <!-- Filter Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter"></i>
+            Tùy chỉnh khoảng thời gian
+        </div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('dashboard') }}" class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <label for="start_date" class="form-label">Ngày bắt đầu</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+                </div>
+                <div class="col-md-5">
+                    <label for="end_date" class="form-label">Ngày kết thúc</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Lọc
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fs-5">Doanh thu</div>
+                            <div class="fs-3 fw-bold">{{ "{:,.0f}".format(total_revenue) }}đ</div>
+                        </div>
+                        <i class="fas fa-coins fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fs-5">Lượng khách</div>
+                            <div class="fs-3 fw-bold">{{ total_guests }}</div>
+                        </div>
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- More metrics can be added here -->
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-area me-1"></i>
+                    Biểu đồ Doanh thu Hàng tháng
+                </div>
+                <div class="card-body">
+                    <div id="monthlyRevenueChart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-column me-1"></i>
+                    Doanh thu Đã thu vs Chưa thu (Theo tháng)
+                </div>
+                <div class="card-body">
+                    <div id="collectedVsUncollectedChart" style="height: 450px;"></div>
+                    
+                    <!-- Bảng số liệu chi tiết -->
+                    {% if collected_vs_uncollected_table_data %}
+                    <div class="mt-4">
+                        <h6><i class="fas fa-table me-1"></i> Chi tiết số liệu:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Tháng</th>
+                                        <th class="text-end">Đã thu (VND)</th>
+                                        <th class="text-end">Chưa thu (VND)</th>
+                                        <th class="text-end">Tổng (VND)</th>
+                                        <th class="text-end">% Đã thu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in collected_vs_uncollected_table_data %}
+                                    <tr>
+                                        <td><strong>{{ row['Tháng'] }}</strong></td>
+                                        <td class="text-end text-success">
+                                            <strong>{{ "{:,.0f}".format(row['Đã thu'] | float) }}đ</strong>
+                                        </td>
+                                        <td class="text-end text-danger">
+                                            <strong>{{ "{:,.0f}".format(row['Chưa thu'] | float) }}đ</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>{{ "{:,.0f}".format((row['Đã thu'] | float) + (row['Chưa thu'] | float)) }}đ</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            {% set total = (row['Đã thu'] | float) + (row['Chưa thu'] | float) %}
+                                            {% if total > 0 %}
+                                                <span class="badge bg-primary">{{ "{:.1f}%".format((row['Đã thu'] | float) / total * 100) }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">0%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Doanh thu theo Người thu tiền
+                </div>
+                <div class="card-body">
+                    <div id="collectorChart" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard loaded, initializing charts...');
+    
+    // Monthly Revenue Chart
+    const monthlyRevenueChartData = {{ monthly_revenue_chart_json | tojson | safe }};
+    console.log('Monthly revenue chart data:', monthlyRevenueChartData);
+    
+    if (monthlyRevenueChartData && 
+        typeof monthlyRevenueChartData === 'object' && 
+        Object.keys(monthlyRevenueChartData).length > 0 &&
+        monthlyRevenueChartData.data && 
+        monthlyRevenueChartData.layout) {
+        try {
+            Plotly.newPlot('monthlyRevenueChart', monthlyRevenueChartData.data, monthlyRevenueChartData.layout, {
+                responsive: true,
+                displayModeBar: false
+            });
+            console.log('Monthly revenue chart rendered successfully');
+        } catch (error) {
+            console.error('Error rendering monthly revenue chart:', error);
+            document.getElementById('monthlyRevenueChart').innerHTML = 
+                '<div class="alert alert-danger">Lỗi hiển thị biểu đồ: ' + error.message + '</div>';
+        }
+    } else {
+        console.log('No monthly revenue chart data available');
+        document.getElementById('monthlyRevenueChart').innerHTML = 
+            '<div class="text-center py-5"><i class="fas fa-chart-line fa-3x text-muted mb-3"></i><p class="text-muted">Không có dữ liệu để hiển thị biểu đồ</p></div>';
+    }
+
+    // Collected vs Uncollected Revenue Chart
+    const collectedVsUncollectedChartData = {{ collected_vs_uncollected_chart_json | tojson | safe }};
+    console.log('Collected vs Uncollected chart data:', collectedVsUncollectedChartData);
+    
+    if (collectedVsUncollectedChartData && 
+        typeof collectedVsUncollectedChartData === 'object' && 
+        Object.keys(collectedVsUncollectedChartData).length > 0 &&
+        collectedVsUncollectedChartData.data && 
+        collectedVsUncollectedChartData.layout) {
+        try {
+            Plotly.newPlot('collectedVsUncollectedChart', collectedVsUncollectedChartData.data, collectedVsUncollectedChartData.layout, {
+                responsive: true,
+                displayModeBar: false
+            });
+            console.log('Collected vs Uncollected chart rendered successfully');
+        } catch (error) {
+            console.error('Error rendering collected vs uncollected chart:', error);
+            document.getElementById('collectedVsUncollectedChart').innerHTML = 
+                '<div class="alert alert-danger">Lỗi hiển thị biểu đồ: ' + error.message + '</div>';
+        }
+    } else {
+        console.log('No collected vs uncollected chart data available');
+        document.getElementById('collectedVsUncollectedChart').innerHTML = 
+            '<div class="text-center py-5"><i class="fas fa-chart-column fa-3x text-muted mb-3"></i><p class="text-muted">Không có dữ liệu để hiển thị biểu đồ doanh thu đã thu/chưa thu</p></div>';
+    }
+
+    // Collector Revenue Pie Chart
+    const collectorChartData = {{ collector_chart_json | tojson | safe }};
+    console.log('Collector chart data:', collectorChartData);
+    
+    if (collectorChartData && 
+        typeof collectorChartData === 'object' && 
+        Object.keys(collectorChartData).length > 0 &&
+        collectorChartData.data && 
+        Array.isArray(collectorChartData.data) &&
+        collectorChartData.data.length > 0 &&
+        collectorChartData.data[0].values && 
+        Array.isArray(collectorChartData.data[0].values) &&
+        collectorChartData.data[0].values.length > 0 &&
+        collectorChartData.layout) {
+        try {
+            Plotly.newPlot('collectorChart', collectorChartData.data, collectorChartData.layout, {
+                responsive: true,
+                displayModeBar: false
+            });
+            console.log('Collector chart rendered successfully');
+        } catch (error) {
+            console.error('Error rendering collector chart:', error);
+            document.getElementById('collectorChart').innerHTML = 
+                '<div class="alert alert-danger">Lỗi hiển thị biểu đồ: ' + error.message + '</div>';
+        }
+    } else {
+        console.log('No collector chart data available or empty values');
+        document.getElementById('collectorChart').innerHTML = 
+            '<div class="text-center py-5"><i class="fas fa-chart-pie fa-3x text-muted mb-3"></i><p class="text-muted">Không có dữ liệu người thu tiền</p></div>';
+    }
+
+    // Debug: Log all data passed to template (comment out if not needed)
+    /*
+    console.log('=== Template Debug Data ===');
+    console.log('Monthly revenue list:', {{ monthly_revenue_list | tojson | safe }});
+    console.log('Monthly collected revenue list:', {{ monthly_collected_revenue_list | tojson | safe }});
+    console.log('Collector revenue list:', {{ collector_revenue_list | tojson | safe }});
+    console.log('Total revenue:', {{ total_revenue | tojson | safe }});
+    console.log('Total guests:', {{ total_guests | tojson | safe }});
+    console.log('=== End Debug Data ===');
+    */
+});
+</script>
+{% endblock %}

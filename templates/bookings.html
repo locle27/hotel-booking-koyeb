@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Quản lý Đặt phòng{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2">
+    <!-- Header compact -->
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <h4 class="mb-0 text-primary">📋 Quản lý Đặt phòng <small class="text-muted">({{ booking_count }})</small></h4>
+        <div class="btn-group btn-group-sm">
+            <button id="delete-selected-btn" class="btn btn-danger" style="display:none;">
+                <i class="fas fa-trash-alt"></i> Xóa
+            </button>
+            <a href="{{ url_for('sync_bookings') }}" class="btn btn-info">
+                <i class="fas fa-sync-alt"></i> Đồng bộ
+            </a>
+            <a href="{{ url_for('export_bookings') }}" class="btn btn-success">
+                <i class="fas fa-file-export"></i> Export
+            </a>
+        </div>
+    </div>
+
+    <!-- Search form compact -->
+    <form method="GET" action="{{ url_for('view_bookings') }}" class="mb-2">
+         <div class="row g-1">
+              <div class="col-md-3">
+                   <input type="text" name="search" class="form-control form-control-sm" placeholder="🔍 Tìm kiếm..." value="{{ search_term }}">
+              </div>
+              <div class="col-auto">
+                   <button type="submit" class="btn btn-sm btn-primary">Tìm</button>
+              </div>
+         </div>
+    </form>
+
+    <!-- Table với compact style -->
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-hover mb-0" style="font-size: 0.85rem;">
+            <thead class="table-primary sticky-top">
+                <tr>
+                    <th style="width: 30px; padding: 4px 8px;">
+                        <input type="checkbox" id="select-all-checkbox" class="form-check-input">
+                    </th>
+                    <th style="padding: 4px 8px;">
+                        <a href="{{ url_for('view_bookings', search_term=search_term, sort_by='Số đặt phòng', order='asc' if current_sort_by == 'Số đặt phòng' and current_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none fw-medium">
+                            Số ĐB 
+                            {% if current_sort_by == 'Số đặt phòng' %}
+                                {% if current_order == 'asc' %}
+                                    <i class="fas fa-sort-up fa-xs text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-down fa-xs text-primary"></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-sort fa-xs text-muted"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th style="padding: 4px 8px;">
+                        <a href="{{ url_for('view_bookings', search_term=search_term, sort_by='Tên người đặt', order='asc' if current_sort_by == 'Tên người đặt' and current_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none fw-medium">
+                            Người đặt 
+                            {% if current_sort_by == 'Tên người đặt' %}
+                                {% if current_order == 'asc' %}
+                                    <i class="fas fa-sort-up fa-xs text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-down fa-xs text-primary"></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-sort fa-xs text-muted"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th style="padding: 4px 8px;">
+                        <a href="{{ url_for('view_bookings', search_term=search_term, sort_by='Check-in Date', order='asc' if current_sort_by == 'Check-in Date' and current_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none fw-medium">
+                            Check-in 
+                            {% if current_sort_by == 'Check-in Date' %}
+                                {% if current_order == 'asc' %}
+                                    <i class="fas fa-sort-up fa-xs text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-down fa-xs text-primary"></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-sort fa-xs text-muted"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th style="padding: 4px 8px;">
+                        <a href="{{ url_for('view_bookings', search_term=search_term, sort_by='Check-out Date', order='asc' if current_sort_by == 'Check-out Date' and current_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none fw-medium">
+                            Check-out 
+                            {% if current_sort_by == 'Check-out Date' %}
+                                {% if current_order == 'asc' %}
+                                    <i class="fas fa-sort-up fa-xs text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-down fa-xs text-primary"></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-sort fa-xs text-muted"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th style="padding: 4px 8px; width: 80px;">
+                        <a href="{{ url_for('view_bookings', search_term=search_term, sort_by='Tình trạng', order='asc' if current_sort_by == 'Tình trạng' and current_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none fw-medium">
+                            Trạng thái 
+                            {% if current_sort_by == 'Tình trạng' %}
+                                {% if current_order == 'asc' %}
+                                    <i class="fas fa-sort-up fa-xs text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-down fa-xs text-primary"></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-sort fa-xs text-muted"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th class="text-end" style="padding: 4px 8px;">
+                        <a href="{{ url_for('view_bookings', search_term=search_term, sort_by='Tổng thanh toán', order='asc' if current_sort_by == 'Tổng thanh toán' and current_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none fw-medium">
+                            Thanh toán 
+                            {% if current_sort_by == 'Tổng thanh toán' %}
+                                {% if current_order == 'asc' %}
+                                    <i class="fas fa-sort-up fa-xs text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-down fa-xs text-primary"></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-sort fa-xs text-muted"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th style="padding: 4px 8px;">
+                        <a href="{{ url_for('view_bookings', search_term=search_term, sort_by='Người thu tiền', order='asc' if current_sort_by == 'Người thu tiền' and current_order == 'desc' else 'desc') }}" class="text-dark text-decoration-none fw-medium">
+                            Người thu 
+                            {% if current_sort_by == 'Người thu tiền' %}
+                                {% if current_order == 'asc' %}
+                                    <i class="fas fa-sort-up fa-xs text-primary"></i>
+                                {% else %}
+                                    <i class="fas fa-sort-down fa-xs text-primary"></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-sort fa-xs text-muted"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th style="padding: 4px 8px; width: 60px;" class="text-dark fw-medium">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr class="align-middle">
+                    <td style="padding: 2px 8px;">
+                        <input type="checkbox" class="booking-checkbox form-check-input" value="{{ booking['Số đặt phòng'] }}">
+                    </td>
+                    <td style="padding: 2px 8px;">
+                        <code class="small">{{ booking['Số đặt phòng'] }}</code>
+                    </td>
+                    <td style="padding: 2px 8px;">
+                        <span class="fw-medium">{{ booking.get('Tên người đặt', 'N/A') }}</span>
+                    </td>
+                    <td style="padding: 2px 8px;">
+                        <small class="text-success">
+                            {{ booking['Check-in Date'].strftime('%d/%m/%y') if booking['Check-in Date'] and pd.notna(booking['Check-in Date']) else 'N/A' }}
+                        </small>
+                    </td>
+                    <td style="padding: 2px 8px;">
+                        <small class="text-danger">
+                            {{ booking['Check-out Date'].strftime('%d/%m/%y') if booking['Check-out Date'] and pd.notna(booking['Check-out Date']) else 'N/A' }}
+                        </small>
+                    </td>
+                    <td style="padding: 2px 8px;">
+                        <span class="badge {{ 'bg-success' if booking.get('Tình trạng') == 'OK' else 'bg-danger' }} badge-sm">
+                            {{ booking.get('Tình trạng', 'N/A') }}
+                        </span>
+                    </td>
+                    <td class="text-end" style="padding: 2px 8px;">
+                        <strong class="text-primary">{{ "{:,.0f}".format(booking.get('Tổng thanh toán', 0)) }}đ</strong>
+                    </td>
+                    <td style="padding: 2px 8px;">
+                        <small class="text-muted">{{ booking.get('Người thu tiền', 'N/A') }}</small>
+                    </td>
+                    <td style="padding: 2px 8px;">
+                        <a href="{{ url_for('edit_booking', booking_id=booking['Số đặt phòng']) }}" 
+                           class="btn btn-outline-primary btn-sm py-0 px-1" 
+                           title="Chỉnh sửa">
+                            <i class="fas fa-edit fa-xs"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer info -->
+    <div class="mt-2 text-muted small">
+        <i class="fas fa-info-circle"></i> Hiển thị {{ bookings|length }} đặt phòng
+    </div>
+</div>
+
+<style>
+.badge-sm {
+    font-size: 0.7rem;
+}
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const bookingCheckboxes = document.querySelectorAll('.booking-checkbox');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+
+    function toggleDeleteButton() {
+        const anyChecked = Array.from(bookingCheckboxes).some(cb => cb.checked);
+        deleteSelectedBtn.style.display = anyChecked ? 'inline-block' : 'none';
+    }
+
+    selectAllCheckbox.addEventListener('change', function () {
+        bookingCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        toggleDeleteButton();
+    });
+
+    bookingCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            if (!this.checked) {
+                selectAllCheckbox.checked = false;
+            } else {
+                const allChecked = Array.from(bookingCheckboxes).every(cb => cb.checked);
+                selectAllCheckbox.checked = allChecked;
+            }
+            toggleDeleteButton();
+        });
+    });
+
+    deleteSelectedBtn.addEventListener('click', function () {
+        const selectedIds = Array.from(bookingCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+
+        if (selectedIds.length > 0 && confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} mục đã chọn không?`)) {
+            fetch('/bookings/delete_multiple', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ids: selectedIds }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Đã xóa các mục đã chọn thành công.');
+                    window.location.reload();
+                } else {
+                    alert('Đã xảy ra lỗi khi xóa: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi:', error);
+                alert('Đã xảy ra lỗi kết nối.');
+            });
+        }
+    });
+
+    toggleDeleteButton(); // Initial check
+});
+</script>
+{% endblock %} 

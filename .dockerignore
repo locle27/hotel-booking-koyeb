@@ -1,0 +1,52 @@
+# Environment files
+.env
+.env.*
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Credentials
+gcp_credentials.json
+*credentials*.json
+*.key
+*.pem
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Documentation
+README.md
+docs/
+
+# Test files
+test_*.py
+*_test.py
+tests/

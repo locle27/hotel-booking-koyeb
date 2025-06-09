@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Chi tiết Ngày {{ date }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">📅 Chi tiết Hoạt động Ngày {{ date }}</h1>
+
+    <div class="row">
+        <!-- Cột Check-in -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">🛬 Khách Check-in ({{ check_in|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if check_in %}
+                        {% for booking in check_in %}
+                            <div class="guest-card">
+                                <p class="guest-name">{{ booking.get('Tên người đặt', 'N/A') }}</p>
+                                <p class="room-type">{{ booking.get('Tên chỗ nghỉ', 'N/A') }}</p>
+                                <p class="details">
+                                    <strong>Mã ĐP:</strong> {{ booking.get('Số đặt phòng', 'N/A') }}<br>
+                                    <strong>Trả phòng:</strong> {{ booking['Check-out Date'].strftime('%d/%m/%Y') if booking['Check-out Date'] and pd.notna(booking['Check-out Date']) else 'N/A' }}<br>
+                                    <strong>Người thu:</strong> {{ booking.get('Người thu tiền', 'N/A') }}<br>
+                                    <strong>Thanh toán:</strong> {{ "{:,.0f}".format(booking.get('Tổng thanh toán', 0)) }}đ
+                                </p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">Không có khách check-in hôm nay.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Đang ở -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">🏨 Khách Đang Ở ({{ staying_over|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if staying_over %}
+                        {% for booking in staying_over %}
+                            <div class="guest-card">
+                                <p class="guest-name">{{ booking.get('Tên người đặt', 'N/A') }}</p>
+                                <p class="room-type">{{ booking.get('Tên chỗ nghỉ', 'N/A') }}</p>
+                                <p class="details">
+                                    <strong>Mã ĐP:</strong> {{ booking.get('Số đặt phòng', 'N/A') }}<br>
+                                    <strong>Ở từ:</strong> {{ booking['Check-in Date'].strftime('%d/%m') if booking['Check-in Date'] and pd.notna(booking['Check-in Date']) else 'N/A' }} - <strong>Trả:</strong> {{ booking['Check-out Date'].strftime('%d/%m') if booking['Check-out Date'] and pd.notna(booking['Check-out Date']) else 'N/A' }}<br>
+                                    <strong>Đã ở:</strong> {{ (current_date - booking['Check-in Date']).days if booking['Check-in Date'] and pd.notna(booking['Check-in Date']) else 'N/A' }} đêm<br>
+                                    <strong>Người thu:</strong> {{ booking.get('Người thu tiền', 'N/A') }}<br>
+                                    <strong>Thanh toán:</strong> {{ "{:,.0f}".format(booking.get('Tổng thanh toán', 0)) }}đ
+                                </p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">Không có khách đang ở lại.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Check-out -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">🛫 Khách Check-out ({{ check_out|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if check_out %}
+                        {% for booking in check_out %}
+                            <div class="guest-card">
+                                <p class="guest-name">{{ booking.get('Tên người đặt', 'N/A') }}</p>
+                                <p class="room-type">{{ booking.get('Tên chỗ nghỉ', 'N/A') }}</p>
+                                <p class="details">
+                                    <strong>Mã ĐP:</strong> {{ booking.get('Số đặt phòng', 'N/A') }}<br>
+                                    <strong>Thời gian ở:</strong> {{ (booking['Check-out Date'] - booking['Check-in Date']).days if booking['Check-in Date'] and booking['Check-out Date'] and pd.notna(booking['Check-in Date']) and pd.notna(booking['Check-out Date']) else 'N/A' }} đêm<br>
+                                    <strong>Người thu:</strong> {{ booking.get('Người thu tiền', 'N/A') }}<br>
+                                    <strong>Thanh toán:</strong> {{ "{:,.0f}".format(booking.get('Tổng thanh toán', 0)) }}đ
+                                </p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">Không có khách check-out hôm nay.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="{{ url_for('calendar_view') }}" class="btn btn-secondary mt-3">&larr; Quay lại Lịch</a>
+</div>
+
+<style>
+    .guest-card {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+    .guest-card:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .guest-name { font-weight: bold; font-size: 1.1em; }
+    .room-type { font-style: italic; color: #555; }
+    .details { font-size: 0.9em; color: #666; margin-top: 5px; }
+</style>
+{% endblock %} 

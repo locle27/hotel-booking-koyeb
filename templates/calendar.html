@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch Đặt Phòng{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 mt-3">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header với navigation -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <a href="{{ url_for('calendar_view', year=prev_month.year, month=prev_month.month) }}" 
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-chevron-left"></i> Tháng {{ prev_month.month }}
+                </a>
+                <h3 class="mb-0 text-primary">
+                    📅 Lịch Đặt Phòng - Tháng {{ current_month.month }}/{{ current_month.year }}
+                </h3>
+                <a href="{{ url_for('calendar_view', year=next_month.year, month=next_month.month) }}" 
+                   class="btn btn-outline-primary btn-sm">
+                    Tháng {{ next_month.month }} <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+
+            <!-- Legend -->
+            <div class="d-flex justify-content-center mb-3">
+                <div class="legend d-flex gap-3">
+                    <span class="legend-item">
+                        <span class="legend-color bg-danger"></span> Hết phòng
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-color bg-primary"></span> Có khách
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-color bg-warning"></span> Trống
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-color bg-light border"></span> Không có dữ liệu
+                    </span>
+                </div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="calendar-container">
+                <div class="calendar-grid">
+                    <!-- Header days -->
+                    <div class="calendar-header">
+                        <div class="day-header sunday">Chủ nhật</div>
+                        <div class="day-header">Thứ hai</div>
+                        <div class="day-header">Thứ ba</div>
+                        <div class="day-header">Thứ tư</div>
+                        <div class="day-header">Thứ năm</div>
+                        <div class="day-header">Thứ sáu</div>
+                        <div class="day-header saturday">Thứ bảy</div>
+                    </div>
+
+                    <!-- Calendar days -->
+                    <div class="calendar-body">
+                        {% for week in calendar_data %}
+                            {% for date, date_str, info in week %}
+                                <div class="calendar-day 
+                                    {% if not date %}empty-day{% endif %}
+                                    {% if date and date == today %}today{% endif %}
+                                    {% if date and date.weekday() == 6 %}sunday{% endif %}
+                                    {% if date and date.weekday() == 5 %}saturday{% endif %}
+                                    {% if info %}{{ info.status_color }}{% endif %}">
+                                    
+                                    {% if date %}
+                                        <a href="{{ url_for('calendar_details', date_str=date_str) }}" class="day-link">
+                                            <div class="day-content">
+                                                <div class="date-number">{{ date.day }}</div>
+                                                
+                                                {% if info %}
+                                                    <div class="status-indicator">
+                                                        <span class="status-badge {{ info.status_color }}">
+                                                            {{ info.status_text }}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <!-- Hiển thị thông tin chi tiết -->
+                                                    <div class="booking-details">
+                                                        <small class="text-primary">
+                                                            <i class="fas fa-bed"></i> {{ info.occupied_units }}/{{ info.occupied_units + info.available_units }}
+                                                        </small>
+                                                        {% if info.available_units > 0 %}
+                                                            <small class="text-success">
+                                                                <i class="fas fa-check"></i> {{ info.available_units }} trống
+                                                            </small>
+                                                        {% else %}
+                                                            <small class="text-danger">
+                                                                <i class="fas fa-times"></i> Hết phòng
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+                                                {% else %}
+                                                    <div class="status-indicator">
+                                                        <span class="status-badge bg-light text-muted">Trống</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Calendar container */
+.calendar-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Calendar grid layout */
+.calendar-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.day-header {
+    padding: 12px 8px;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-right: 1px solid rgba(255,255,255,0.2);
+}
+
+.day-header:last-child {
+    border-right: none;
+}
+
+.day-header.sunday, .day-header.saturday {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Calendar body */
+.calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+}
+
+/* Individual day cells */
+.calendar-day {
+    border: 1px solid #e9ecef;
+    border-collapse: collapse;
+    position: relative;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.calendar-day:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 2;
+}
+
+.calendar-day.empty-day {
+    background: #f8f9fa;
+    opacity: 0.3;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 2px solid #ffc107;
+    font-weight: bold;
+}
+
+.calendar-day.sunday, .calendar-day.saturday {
+    background: #f1f3f4;
+}
+
+/* Day link */
+.day-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    padding: 8px;
+}
+
+.day-link:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Day content layout */
+.day-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.date-number {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    text-align: right;
+    margin-bottom: 4px;
+}
+
+.today .date-number {
+    color: #856404;
+}
+
+/* Status indicator */
+.status-indicator {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 60px;
+}
+
+.status-badge.full, .status-badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: white;
+}
+
+.status-badge.occupied, .status-badge.bg-primary {
+    background-color: #0d6efd !important;
+    color: white;
+}
+
+.status-badge.empty, .status-badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000;
+}
+
+.status-badge.bg-light {
+    background-color: #f8f9fa !important;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+}
+
+/* Booking details */
+.booking-details {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 4px;
+    border-top: 1px solid #eee;
+}
+
+.booking-details small {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.7rem;
+}
+
+/* Legend */
+.legend {
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-body {
+        grid-auto-rows: minmax(100px, auto);
+    }
+    
+    .day-header {
+        padding: 8px 4px;
+        font-size: 0.8rem;
+    }
+    
+    .date-number {
+        font-size: 1rem;
+    }
+    
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        min-width: 50px;
+    }
+    
+    .booking-details {
+        flex-direction: column;
+        gap: 2px;
+    }
+}
+
+@media (max-width: 576px) {
+    .day-header {
+        padding: 6px 2px;
+        font-size: 0.7rem;
+    }
+    
+    .calendar-body {
+        grid-auto-rows: minmax(80px, auto);
+    }
+    
+    .legend {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+</style>
+{% endblock %} 

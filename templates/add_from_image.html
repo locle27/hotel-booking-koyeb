@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Đặt Phòng từ Ảnh</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        #paste-area { border: 2px dashed #007bff; border-radius: 8px; padding: 40px; text-align: center; background-color: #f0f8ff; cursor: pointer; transition: background-color 0.3s; }
+        #paste-area:hover { background-color: #e7f3ff; }
+        #results-container { margin-top: 20px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message { color: #d9534f; background-color: #f2dede; border: 1px solid #ebccd1; padding: 15px; border-radius: 5px; margin-top: 15px; }
+        .success-message { color: #28a745; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        th { background-color: #e9ecef; }
+        .save-button { background-color: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        .save-button:hover { background-color: #218838; }
+        .home-button { background-color: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; transition: background-color 0.3s; }
+        .home-button:hover { background-color: #5a6268; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-spacer { width: 120px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <button onclick="goToHome()" class="home-button">
+                🏠 Trang chính
+            </button>
+            <h1 style="margin: 0; color: #0056b3;">📸 Thêm Đặt Phòng từ Ảnh</h1>
+            <div class="header-spacer"></div> <!-- Spacer để cân bằng layout -->
+        </div>
+        <p>Dán (Ctrl+V) hình ảnh chứa danh sách đặt phòng vào khu vực dưới đây.</p>
+        
+        <div id="paste-area">
+            <p>Dán hình ảnh vào đây</p>
+        </div>
+
+        <div id="results-container">
+            <div id="spinner" class="spinner"></div>
+            <div id="message-box"></div>
+            <form id="save-form" action="/bookings/save_extracted" method="POST" style="display: none;">
+                <input type="hidden" name="extracted_json" id="extracted_json_input">
+                <div id="results-table"></div>
+                <button type="submit" class="save-button">💾 Lưu các đặt phòng hợp lệ</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Function để chuyển về trang chính
+        function goToHome() {
+            window.location.href = '/';
+        }
+        
+        document.addEventListener('paste', async (event) => {
+            const pasteArea = document.getElementById('paste-area');
+            const spinner = document.getElementById('spinner');
+            const messageBox = document.getElementById('message-box');
+            const saveForm = document.getElementById('save-form');
+            const resultsTable = document.getElementById('results-table');
+
+            // Xóa kết quả cũ
+            messageBox.innerHTML = '';
+            resultsTable.innerHTML = '';
+            saveForm.style.display = 'none';
+
+            const items = (event.clipboardData || window.clipboardData).items;
+            let imageFile = null;
+
+            for (const item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    imageFile = item.getAsFile();
+                    break;
+                }
+            }
+
+            if (!imageFile) {
+                messageBox.innerHTML = `<div class="error-message">Lỗi: Dữ liệu dán vào không phải là hình ảnh.</div>`;
+                return;
+            }
+
+            spinner.style.display = 'block';
+            pasteArea.style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64Image = e.target.result;
+                
+                try {
+                    const response = await fetch('/api/process_pasted_image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image_b64: base64Image })
+                    });
+
+                    spinner.style.display = 'none';
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Lỗi từ server: ${response.statusText}`);
+                    }
+
+                    const extractedData = await response.json();
+
+                    // === PHẦN SỬA LỖI QUAN TRỌNG NHẤT ===
+                    // Luôn kiểm tra dữ liệu trả về có phải là một mảng (Array) hay không trước khi dùng .length
+                    if (!Array.isArray(extractedData) || extractedData.length === 0) {
+                        messageBox.innerHTML = `<div class="error-message">Không tìm thấy đặt phòng nào trong ảnh hoặc có lỗi xảy ra.</div>`;
+                        pasteArea.style.display = 'block';
+                        return;
+                    }
+
+                    // Hiển thị kết quả
+                    let tableHtml = '<table><thead><tr><th>Tên khách</th><th>Ngày đến</th><th>Ngày đi</th><th>Loại phòng</th><th>Tổng tiền</th><th>Ghi chú</th></tr></thead><tbody>';
+                    let validBookings = [];
+
+                    for (const booking of extractedData) {
+                        // Nếu có lỗi trong từng booking, hiển thị lỗi đó
+                        if (booking.error) {
+                            tableHtml += `<tr><td colspan="6" class="error-message">${booking.error}</td></tr>`;
+                            continue;
+                        }
+                        
+                        validBookings.push(booking);
+                        tableHtml += `
+                            <tr>
+                                <td>${booking.guest_name || 'N/A'}</td>
+                                <td>${booking.check_in_date || 'N/A'}</td>
+                                <td>${booking.check_out_date || 'N/A'}</td>
+                                <td>${booking.room_type || 'N/A'}</td>
+                                <td>${booking.total_payment ? booking.total_payment.toLocaleString('vi-VN') : 'N/A'}</td>
+                                <td>${booking.commission ? 'Hoa hồng: ' + booking.commission.toLocaleString('vi-VN') : ''}</td>
+                            </tr>
+                        `;
+                    }
+                    tableHtml += '</tbody></table>';
+                    resultsTable.innerHTML = tableHtml;
+
+                    // Nếu có booking hợp lệ, hiển thị form lưu
+                    if (validBookings.length > 0) {
+                        document.getElementById('extracted_json_input').value = JSON.stringify(validBookings);
+                        saveForm.style.display = 'block';
+                        messageBox.innerHTML = `<div class="success-message">Đã trích xuất thành công ${validBookings.length} đặt phòng. Vui lòng kiểm tra và lưu lại.</div>`;
+                    } else {
+                        messageBox.innerHTML = `<div class="error-message">Không có đặt phòng nào hợp lệ để lưu.</div>`;
+                    }
+
+                } catch (error) {
+                    spinner.style.display = 'none';
+                    messageBox.innerHTML = `<div class="error-message">Lỗi nghiêm trọng: ${error.message}</div>`;
+                    pasteArea.style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(imageFile);
+        });
+    </script>
+</body>
+</html>

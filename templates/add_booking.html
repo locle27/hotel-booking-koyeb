@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Thêm Đặt phòng Mới{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Thêm Đặt phòng Mới</h1>
+<form method="POST" action="{{ url_for('add_booking') }}">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="Tên người đặt" class="form-label">Tên người đặt</label>
+            <input type="text" class="form-control" id="Tên người đặt" name="Tên người đặt" required>
+        </div>
+        <div class="col-md-6">
+            <label for="Số đặt phòng" class="form-label">Số đặt phòng (Booking ID)</label>
+            <input type="text" class="form-control" id="Số đặt phòng" name="Số đặt phòng" required>
+        </div>
+
+        <div class="col-md-12">
+            <label for="Tên chỗ nghỉ" class="form-label">Tên chỗ nghỉ (Room Name)</label>
+            <input type="text" class="form-control" id="Tên chỗ nghỉ" name="Tên chỗ nghỉ" required>
+        </div>
+
+        <div class="col-md-4">
+            <label for="Ngày đến" class="form-label">Ngày đến (Check-in)</label>
+            <input type="date" class="form-control" id="Ngày đến" name="Ngày đến" required>
+        </div>
+        <div class="col-md-4">
+            <label for="Ngày đi" class="form-label">Ngày đi (Check-out)</label>
+            <input type="date" class="form-control" id="Ngày đi" name="Ngày đi" required>
+        </div>
+        <div class="col-md-4">
+            <label for="Được đặt vào" class="form-label">Ngày đặt (Booking Date)</label>
+            <input type="date" class="form-control" id="Được đặt vào" name="Được đặt vào" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="Tổng thanh toán" class="form-label">Tổng thanh toán</label>
+            <input type="number" step="0.01" class="form-control" id="Tổng thanh toán" name="Tổng thanh toán" required>
+        </div>
+        <div class="col-md-6">
+            <label for="Hoa hồng" class="form-label">Hoa hồng</label>
+            <input type="number" step="0.01" class="form-control" id="Hoa hồng" name="Hoa hồng" required>
+        </div>
+        
+        <div class="col-md-4">
+            <label for="Tình trạng" class="form-label">Tình trạng</label>
+            <select class="form-select" id="Tình trạng" name="Tình trạng">
+                <option value="OK" selected>OK</option>
+                <option value="Đã hủy">Đã hủy</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="Người thu tiền" class="form-label">Người thu tiền</label>
+            <input type="text" class="form-control" id="Người thu tiền" name="Người thu tiền">
+        </div>
+        <div class="col-md-4">
+            <label for="Tiền tệ" class="form-label">Tiền tệ</label>
+            <input type="text" class="form-control" id="Tiền tệ" name="Tiền tệ" value="VND">
+        </div>
+
+        <div class="col-md-6">
+            <label for="Vị trí" class="form-label">Vị trí</label>
+            <input type="text" class="form-control" id="Vị trí" name="Vị trí">
+        </div>
+        
+        <div class="col-md-6">
+            <label for="Thành viên Genius" class="form-label">Thành viên Genius</label>
+             <select class="form-select" id="Thành viên Genius" name="Thành viên Genius">
+                <option value="Không" selected>Không</option>
+                <option value="Có">Có</option>
+            </select>
+        </div>
+
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-4">Thêm Đặt phòng</button>
+    <a href="{{ url_for('view_bookings') }}" class="btn btn-secondary mt-4">Hủy</a>
+</form>
+{% endblock %} 

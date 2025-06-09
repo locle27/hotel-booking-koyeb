@@ -1,0 +1,44 @@
+# Environment variables
+.env
+.env.*
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE configuration files
+.vscode/
+.idea/ 
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Credentials and sensitive files
+gcp_credentials.json
+*credentials*.json
+*.key
+*.pem
+
+# Files containing credentials (for deployment)
+*-credentials-*.txt
+koyeb-*.txt
+*-env-vars.txt
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+.cache/
